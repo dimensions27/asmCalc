@@ -19,9 +19,9 @@
 
 section .bss
 	buffer			resb	10	;revise size of buffer
-	converted		resb	10	;converted to int
-	tempans			resb 	1	;temporary answerholder for calculations
-	result			resb    1	;final result (int)
+	converted		resw	10	;converted to int
+	tempans			resw 	2	;temporary answerholder for calculations
+	result			resw    1	;final result (int)
 	ascii			resb	1	;final result (ascii)
 	
 section .data
@@ -39,30 +39,31 @@ _start:
 	
 	call			toInt
 	
-	mov			r10, byte[converted]
+	mov			r10, qword[converted]
 	mov			r12, 0
-	mov 			al, byte[r10+r12]
+	mov 			ax, word[r10+r12]
 	
 	
 findOper:
 
-	cmp 			al, '+'			; seeing if index is at add to call its function
-	je 			add
+	cmp 			ax, 43			; seeing if index is at add to call its function
+	je 			addition
 	
-	cmp			al, '/'			; seeing if index is at divide
+	cmp			ax, 47			; seeing if index is at divide
 	je 			divide
 	
-	cmp			al, '*'			; seeing if index is at multiply to call its function
+	cmp			ax, 42			; seeing if index is at multiply to call its function
 	je			multiply
 	
-	cmp			al, '-'			; seeing if index is at subtract to call its function
+	cmp			ax, 45			; seeing if index is at subtract to call its function
 	je			subtract
 	
 	inc 			r12
-	cmp			al, 0
+	cmp			ax, 0
 	jne			findOper
 	
-	mov			byte[result], byte[tempans]
+	mov			ax, word[tempans]
+	mov			word[result], ax
 end:
 	
 	call 			toString
@@ -93,12 +94,12 @@ skip0:
 	inc			rsi					
 	cmp			rsi, 3					
 	jl			input				
-	mov			byte[converted], ax			
+	mov			word[converted], ax			
 	ret
 	
 ; TO STRING FUNCTION
 toString:
-	mov 			ax, byte[result]
+	mov 			ax, word[result]
 	mov 			rcx, 0
 	mov 			bx, 10	
 					
@@ -122,88 +123,84 @@ popLoop:
 	ret
 					
 ; ADDITION FUNCTION 
-add:
+addition:
 	cmp			r12, 1
 	jne			cont_add			
-first:	
+a_first:	
 	dec			r12
-	mov 			byte[tempans], byte[r10+r12]
+	mov 			ax, word[r10+r12]
 	inc			r12
 	inc			r12
-	mov			ax, byte[tempans]
-	add			ax, byte[r10+r12]
-	mov			byte[tempans], ax
+	add			ax, word[r10+r12]
+	mov			word[tempans], ax
 		
 	ret
 	
 cont_add:
-	mov			ax, byte[tempans]
+	mov			ax, word[tempans]
 	inc 			r12
-	add			ax, byte[r10+r12]
-	mov			byte[tempans], ax
+	add			ax, word[r10+r12]
+	mov			word[tempans], ax
 	ret
 	
 ; DIVISION FUNCTION
 divide:
 	cmp			r12, 1
 	jne			cont_div			
-first:	
+d_first:	
 	dec			r12
-	mov			byte[tempans], byte[r10+r12]
-	inc		`	r12
+	mov			dx, word[r10+r12]
+	inc			r12
 	inc 			r12
-	mov 			ax, byte[tempans]
-	div			byte[r10+r12] 			
-	mov			byte[tempans], ax
+	div			word[r10+r12] 			
+	mov			word[tempans], dx
 	ret
 	
 cont_div:
-	mov			ax, byte[tempans]
+	mov			dx, word[tempans]
 	inc 			r12
-	div 			byte[r10+r12]
-	mov			byte[tempans], ax
+	div 			word[r10+r12]
+	mov			word[tempans], dx
 	ret
 
 ; MULTIPLY FUNCTION
 multiply:
 	cmp			r12, 1
 	jne			cont_mul			
-first:	
+m_first:	
 	dec			r12
-	mov			byte[tempans], byte[r10+r12]
-	inc		`	r12
-	inc 		r12
-	mov 		ax, byte[tempans]
-	mul			byte[r10+r12] 			
-	mov			byte[tempans], ax
+	mov			cx, word[r10+r12]
+	inc			r12
+	inc 			r12
+	mul			word[r10+r12] 			
+	mov			word[tempans], cx
 	ret
 	
 cont_mul:
-	mov			ax, byte[tempans]
-	inc 		r12
-	mul			byte[r10+r12]
-	mov			byte[tempans], ax
+	mov			cx, word[tempans]
+	inc 			r12
+	mul			word[r10+r12]
+	mov			word[tempans], cx
 	ret
 
 ; SUBTRACT FUNCTION
 subtract:
 	cmp			r12, 1
 	jne			cont_sub			
-first:	
+s_first:	
 	dec			r12
-	mov 		byte[tempans], byte[r10+r12]
+	mov 			bx, word[r10+r12]
 	inc			r12
 	inc			r12
-	mov			ax, byte[tempans]
-	sub			ax, byte[r10+r12]
-	mov			byte[tempans], ax
+	sub			bx, word[r10+r12]
+	mov			word[tempans], bx
 		
 	ret
 	
 cont_sub:
-	mov			ax, byte[tempans]
+	mov			bx, word[tempans]
 	inc 			r12
-	sub			ax, byte[r10+r12]
-	mov			byte[tempans], ax
+	sub			bx, word[r10+r12]
+	mov			word[tempans], bx
 	ret
 	

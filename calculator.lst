@@ -1,0 +1,227 @@
+     1                                 %line 1+1 calculator.asm
+     2                                 
+     3                                 
+     4                                 %line 10+1 calculator.asm
+     5                                 
+     6                                 
+     7                                 %line 19+1 calculator.asm
+     8                                 
+     9                                 [section .bss]
+    10 00000000 <gap>                   buffer resb 10
+    11 0000000A <gap>                   converted resw 10
+    12 0000001E <gap>                   tempans resw 2
+    13 00000022 <gap>                   result resw 1
+    14 00000024 <gap>                   ascii resb 1
+    15                                 
+    16                                 [section .data]
+    17                                  SYS_exit equ 60
+    18                                  EXIT_SUCCESS equ 0
+    19 00000000 456E74657220616E20-     msg1 db "Enter an Operation: "
+    20 00000000 4F7065726174696F6E-
+    21 00000000 3A20               
+    22 00000014 203D20                  msg2 db " = "
+    23                                 
+    24                                 [section .text]
+    25                                 [global _start]
+    26                                 
+    27                                 _start:
+    28 00000000 48C7C001000000          mov rax, 1
+    29                                 %line 37+0 calculator.asm
+    30 00000007 48C7C701000000          mov rdi, 1
+    31 0000000E 48C7C6[00000000]        mov rsi, msg1
+    32 00000015 48C7C215000000          mov rdx, 21
+    33 0000001C 0F05                    syscall
+    34                                 %line 38+1 calculator.asm
+    35 0000001E 48C7C000000000          mov rax, 0
+    36                                 %line 38+0 calculator.asm
+    37 00000025 48C7C700000000          mov rdi, 0
+    38 0000002C 48C7C6[00000000]        mov rsi, buffer
+    39 00000033 48C7C20A000000          mov rdx, 10
+    40 0000003A 0F05                    syscall
+    41                                 %line 39+1 calculator.asm
+    42                                 
+    43 0000003C E8BF000000              call toInt
+    44                                 
+    45 00000041 4C8B1425[00000000]      mov r10, qword[converted]
+    46 00000049 49C7C400000000          mov r12, 0
+    47 00000050 66438B0422              mov ax, word[r10+r12]
+    48                                 
+    49                                 
+    50                                 findOper:
+    51                                 
+    52 00000055 6683F82B                cmp ax, 43
+    53 00000059 0F841B010000            je addition
+    54                                 
+    55 0000005F 6683F82F                cmp ax, 47
+    56 00000063 0F844C010000            je divide
+    57                                 
+    58 00000069 6683F82A                cmp ax, 42
+    59 0000006D 0F847D010000            je multiply
+    60                                 
+    61 00000073 6683F82D                cmp ax, 45
+    62 00000077 0F84AE010000            je subtract
+    63                                 
+    64 0000007D 49FFC4                  inc r12
+    65 00000080 6683F800                cmp ax, 0
+    66 00000084 75CD                    jne findOper
+    67                                 
+    68 00000086 668B0425[00000000]      mov ax, word[tempans]
+    69 0000008E 66890425[00000000]      mov word[result], ax
+    70                                 end:
+    71                                 
+    72 00000096 E89D000000              call toString
+    73                                 
+    74 0000009B 48C7C001000000          mov rax, 1
+    75                                 %line 71+0 calculator.asm
+    76 000000A2 48C7C701000000          mov rdi, 1
+    77 000000A9 48C7C6[00000000]        mov rsi, buffer
+    78 000000B0 48C7C20A000000          mov rdx, 10
+    79 000000B7 0F05                    syscall
+    80                                 %line 72+1 calculator.asm
+    81 000000B9 48C7C001000000          mov rax, 1
+    82                                 %line 72+0 calculator.asm
+    83 000000C0 48C7C701000000          mov rdi, 1
+    84 000000C7 48C7C6[00000000]        mov rsi, msg2
+    85 000000CE 48C7C203000000          mov rdx, 3
+    86 000000D5 0F05                    syscall
+    87                                 %line 73+1 calculator.asm
+    88 000000D7 48C7C001000000          mov rax, 1
+    89                                 %line 73+0 calculator.asm
+    90 000000DE 48C7C701000000          mov rdi, 1
+    91 000000E5 48C7C6[00000000]        mov rsi, ascii
+    92 000000EC 48C7C201000000          mov rdx, 1
+    93 000000F3 0F05                    syscall
+    94                                 %line 74+1 calculator.asm
+    95                                 
+    96 000000F5 48C7C03C000000          mov rax, SYS_exit
+    97 000000FC 48C7C700000000          mov rdi, EXIT_SUCCESS
+    98 00000103 0F05                    syscall
+    99                                 
+   100                                 
+   101                                 
+   102                                 toInt:
+   103 00000105 66B80000                mov ax, 0
+   104 00000109 66BB0A00                mov bx, 10
+   105 0000010D 48C7C600000000          mov rsi, 0
+   106                                 input:
+   107 00000114 8A8E[00000000]          mov cl, byte[rsi+buffer]
+   108 0000011A 80E10F                  and cl, 0f
+   109 0000011D 00C8                    add al, cl
+   110 0000011F 80D400                  adc ah, 0
+   111 00000122 4883FE02                cmp rsi, 2
+   112 00000126 7401                    je skip0
+   113 00000128 66F7E3                  mul bx
+   114                                 skip0:
+   115 0000012B 48FFC6                  inc rsi
+   116 0000012E 4883FE03                cmp rsi, 3
+   117 00000132 7CDE                    jl input
+   118 00000134 66890425[00000000]      mov word[converted], ax
+   119 0000013C C3                      ret
+   120                                 
+   121                                 
+   122                                 toString:
+   123 0000013D 668B0425[00000000]      mov ax, word[result]
+   124 00000145 48C7C100000000          mov rcx, 0
+   125 0000014C 66BB0A00                mov bx, 10
+   126                                 
+   127                                 divideLoop:
+   128 00000150 66BA0000                mov dx, 0
+   129 00000154 66F7F3                  div bx
+   130 00000157 6652                    push dx
+   131 00000159 48FFC1                  inc rcx
+   132 0000015C 6683F800                cmp ax, 0
+   133 00000160 75EC                    jne divideLoop
+   134                                 
+   135 00000162 48C7C3[00000000]        mov rbx, ascii
+   136 00000169 48C7C700000000          mov rdi, 0
+   137                                 popLoop:
+   138 00000170 58                      pop rax
+   139 00000171 0430                    add al, "0"
+   140 00000173 88043B                  mov byte [rbx+rdi], al
+   141 00000176 48FFC7                  inc rdi
+   142 00000179 E2F3                    loop popLoop
+   143 0000017B C6043B0A                mov byte [rbx+rdi], 10
+   144 0000017F C3                      ret
+   145                                 
+   146                                 
+   147                                 addition:
+   148 00000180 4983FC01                cmp r12, 1
+   149 00000184 751A                    jne cont_add
+   150                                 a_first:
+   151 00000186 49FFCC                  dec r12
+   152 00000189 66438B0422              mov ax, word[r10+r12]
+   153 0000018E 49FFC4                  inc r12
+   154 00000191 49FFC4                  inc r12
+   155 00000194 6643030422              add ax, word[r10+r12]
+   156 00000199 66890425[00000000]      mov word[tempans], ax
+   157                                 
+   158 000001A1 C3                      ret
+   159                                 
+   160                                 cont_add:
+   161 000001A2 668B0425[00000000]      mov ax, word[tempans]
+   162 000001AA 49FFC4                  inc r12
+   163 000001AD 6643030422              add ax, word[r10+r12]
+   164 000001B2 66890425[00000000]      mov word[tempans], ax
+   165 000001BA C3                      ret
+   166                                 
+   167                                 
+   168                                 divide:
+   169 000001BB 4983FC01                cmp r12, 1
+   170 000001BF 751A                    jne cont_div
+   171                                 d_first:
+   172 000001C1 49FFCC                  dec r12
+   173 000001C4 66438B1422              mov dx, word[r10+r12]
+   174 000001C9 49FFC4                  inc r12
+   175 000001CC 49FFC4                  inc r12
+   176 000001CF 6643F73422              div word[r10+r12]
+   177 000001D4 66891425[00000000]      mov word[tempans], dx
+   178 000001DC C3                      ret
+   179                                 
+   180                                 cont_div:
+   181 000001DD 668B1425[00000000]      mov dx, word[tempans]
+   182 000001E5 49FFC4                  inc r12
+   183 000001E8 6643F73422              div word[r10+r12]
+   184 000001ED 66891425[00000000]      mov word[tempans], dx
+   185 000001F5 C3                      ret
+   186                                 
+   187                                 
+   188                                 multiply:
+   189 000001F6 4983FC01                cmp r12, 1
+   190 000001FA 751A                    jne cont_mul
+   191                                 m_first:
+   192 000001FC 49FFCC                  dec r12
+   193 000001FF 66438B0C22              mov cx, word[r10+r12]
+   194 00000204 49FFC4                  inc r12
+   195 00000207 49FFC4                  inc r12
+   196 0000020A 6643F72422              mul word[r10+r12]
+   197 0000020F 66890C25[00000000]      mov word[tempans], cx
+   198 00000217 C3                      ret
+   199                                 
+   200                                 cont_mul:
+   201 00000218 668B0C25[00000000]      mov cx, word[tempans]
+   202 00000220 49FFC4                  inc r12
+   203 00000223 6643F72422              mul word[r10+r12]
+   204 00000228 66890C25[00000000]      mov word[tempans], cx
+   205 00000230 C3                      ret
+   206                                 
+   207                                 
+   208                                 subtract:
+   209 00000231 4983FC01                cmp r12, 1
+   210 00000235 751A                    jne cont_sub
+   211                                 s_first:
+   212 00000237 49FFCC                  dec r12
+   213 0000023A 66438B1C22              mov bx, word[r10+r12]
+   214 0000023F 49FFC4                  inc r12
+   215 00000242 49FFC4                  inc r12
+   216 00000245 66432B1C22              sub bx, word[r10+r12]
+   217 0000024A 66891C25[00000000]      mov word[tempans], bx
+   218                                 
+   219 00000252 C3                      ret
+   220                                 
+   221                                 cont_sub:
+   222 00000253 668B1C25[00000000]      mov bx, word[tempans]
+   223 0000025B 49FFC4                  inc r12
+   224 0000025E 66432B1C22              sub bx, word[r10+r12]
+   225 00000263 66891C25[00000000]      mov word[tempans], bx
+   226 0000026B C3                      ret
+   227                                 
