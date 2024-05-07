@@ -149,17 +149,20 @@ divide:
 	jne			cont_div			
 first:	
 	dec			r12
-	div
-	
+	mov			byte[tempans], byte[r10+r12]
+	inc		`	r12
+	inc 			r12
+	mov 			ax, byte[tempans]
+	div			byte[r10+r12] 			
+	mov			byte[tempans], ax
 	ret
 	
 cont_div:
 	mov			ax, byte[tempans]
 	inc 			r12
-	add			ax, byte[r10+r12]
+	div 			byte[r10+r12]
 	mov			byte[tempans], ax
 	ret
-	
 
 ; MULTIPLY FUNCTION
 multiply:
