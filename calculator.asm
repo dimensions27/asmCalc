@@ -37,7 +37,6 @@ parse_loop:
     cmp     al, 0               ; Check for end of string
     je      end_parse
 
-    ; Parse character
     cmp     al, '+'             ; Check for addition
     je      perform_addition
     cmp     al, '-'             ; Check for subtraction
@@ -48,6 +47,16 @@ parse_loop:
     je      perform_division
     ; If the character is not an operator, it's treated as a digit, continue parsing
 
+    ; Convert ASCII character to numeric value
+    sub     al, '0'
+
+    ; Add the numeric value to the temporary answer
+    add     dword [rdi], eax
+
+    jmp     next_char
+
+
+
 perform_addition:
     add     dword [rdi], eax   ; Add the current number to the temporary answer
     jmp     next_char
@@ -57,14 +66,14 @@ perform_subtraction:
     jmp     next_char
 
 perform_multiplication:
-    imul    dword [rdi], eax   ; Multiply the temporary answer by the current number
+    mul    dword [rdi], eax   ; Multiply the temporary answer by the current number
     jmp     next_char
 
 perform_division:
     xor     edx, edx           ; Clear EDX for division
     mov     ecx, eax           ; Move the current number to ECX for division
     mov     eax, dword [rdi]   ; Move the temporary answer to EAX for division
-    idiv    ecx                ; Divide the temporary answer by the current number
+    div    ecx                ; Divide the temporary answer by the current number
     mov     dword [rdi], eax   ; Store the result back in the temporary answer
 
 next_char:
