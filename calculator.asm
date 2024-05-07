@@ -166,7 +166,44 @@ cont_div:
 
 ; MULTIPLY FUNCTION
 multiply:
+	cmp			r12, 1
+	jne			cont_mul			
+first:	
+	dec			r12
+	mov			byte[tempans], byte[r10+r12]
+	inc		`	r12
+	inc 		r12
+	mov 		ax, byte[tempans]
+	mul			byte[r10+r12] 			
+	mov			byte[tempans], ax
+	ret
+	
+cont_mul:
+	mov			ax, byte[tempans]
+	inc 		r12
+	mul			byte[r10+r12]
+	mov			byte[tempans], ax
+	ret
 
 ; SUBTRACT FUNCTION
 subtract:
+	cmp			r12, 1
+	jne			cont_sub			
+first:	
+	dec			r12
+	mov 		byte[tempans], byte[r10+r12]
+	inc			r12
+	inc			r12
+	mov			ax, byte[tempans]
+	sub			ax, byte[r10+r12]
+	mov			byte[tempans], ax
+		
+	ret
+	
+cont_sub:
+	mov			ax, byte[tempans]
+	inc 			r12
+	sub			ax, byte[r10+r12]
+	mov			byte[tempans], ax
+	ret
 	
