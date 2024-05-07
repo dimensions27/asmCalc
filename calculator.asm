@@ -1,204 +1,95 @@
-
-; Print Macro
-%macro	print 			2
-        mov     		rax, 1				
-        mov     		rdi, 1					
-        mov     		rsi, %1					
-        mov     		rdx, %2					
-        syscall						
-%endmacro
-
-; Scan Macro
-%macro	scan 			2
-        mov     		rax, 0					
-        mov     		rdi, 0					
-        mov     		rsi, %1					
-        mov     		rdx, %2					
-        syscall						
-%endmacro
-
 section .bss
-	buffer			resb	10	;revise size of buffer
-	tempans			resd 	2	;temporary answerholder for calculations
-	result			resd    1	;final result (int)
-	ascii			resb	1	;final result (ascii)
-	
+    buffer          resb    10  ; input buffer
+    tempans         resd    1   ; temporary answer holder for calculations
+    result          resb    10  ; final result (ASCII)
+    
 section .data
-	SYS_exit		equ	60
-	EXIT_SUCCESS		equ	0
-	msg1			db	"Enter an Operation: "
-	msg2			db	" = "
+    SYS_exit        equ     60
+    EXIT_SUCCESS    equ     0
+    msg1            db      "Enter an Operation: ", 0
+    msg2            db      " = ", 0
 
 section .text
-        global _start
-        
+    global _start
+
 _start:
-	print			msg1, 21				
-	scan			buffer, 10
-	
-	call			toInt
+    print   msg1, 19            ; Print prompt
+    scan    buffer, 10          ; Read user input
 
-	mov			rcx, 0
-	mov			rsi, 0
-	mov			rsi, qword[tempans+rcx]
-	
-findOper:
+    call    calculate           ; Perform calculations
 
-	cmp 			qword[rsi], '+'			; seeing if index is at add to call its function
-	je 			addition
-	
-	cmp			qword[rsi], '/'			; seeing if index is at divide
-	je 			divide
-	
-	cmp			qword[rsi], '*'			; seeing if index is at multiply to call its function
-	je			multiply
-	
-	cmp			qword[rsi], '-'		; seeing if index is at subtract to call its function
-	je			subtract
-	
-	inc 			ax
-	cmp			ax, 0
-	jne			findOper
-	
-	mov			ax, word[tempans]
-	mov			word[result], ax
-end:
-	
-	call 			toString
-	
-	print			buffer, 10 	;revise size of buffer 
-	print 			msg2, 3			
-	print			ascii, 1				
+    print   buffer, 10          ; Print input expression
+    print   msg2, 3             ; Print '='
+    print   result, 10          ; Print result
 
-        mov     		rax, SYS_exit				
-        mov     		rdi, EXIT_SUCCESS			
-        syscall		
-        
+    ; Exit
+    mov     rax, SYS_exit
+    xor     rdi, rdi
+    syscall
 
-; TO INTEGER FUNCTION 
-toInt:
-	mov			ax, 0					
-	mov			bx, 10				
-	mov			rsi, 0					
-input:
-	mov			cl, byte[rsi+buffer]
-	and			cl, 0fh			
-	add			al, cl
-	adc			ah, 0					
-	cmp			rsi, 2					
-	je			skip0					
-	mul			bx					
-skip0:
-	inc			rsi					
-	cmp			rsi, 3					
-	jl			input				
-	mov			word[tempans], ax			
-	ret
-	
-; TO STRING FUNCTION
-toString:
-	mov 			ax, word[result]
-	mov 			rcx, 0
-	mov 			bx, 10	
-					
-divideLoop:		
-	mov 			dx, 0
-	div 			bx 					
-	push 			dx 				
-	inc 			rcx 					
-	cmp 			ax, 0 				
-	jne 			divideLoop 				
+calculate:
+    mov     rsi, buffer         ; Point RSI to the beginning of the input buffer
+    mov     rdi, tempans        ; Point RDI to the temporary answer holder
+    mov     rcx, 0              ; Initialize loop counter
 
-	mov 			rbx, ascii				
-	mov 			rdi, 0					
-popLoop:
-	pop 			rax 				
-	add 			al, "0" 				
-	mov 			byte [rbx+rdi], al 			
-	inc 			rdi					
-	loop 			popLoop 				
-	mov 			byte [rbx+rdi], 10 			
-	ret
-					
-; ADDITION FUNCTION 
-addition:
-	cmp			rsi, 1
-	jne			cont_add			
-a_first:	
-	dec			rsi
-	mov 			ax, word[rdi+rsi]
-	inc			rsi
-	inc			rsi
-	add			ax, word[rdi+rsi]
-	mov			word[tempans], ax
-		
-	ret
-	
-cont_add:
-	mov			ax, word[tempans]
-	inc 			rsi
-	add			ax, word[rdi+rsi]
-	mov			word[tempans], ax
-	ret
-	
-; DIVISION FUNCTION
-divide:
-	cmp			rsi, 1
-	jne			cont_div			
-d_first:	
-	dec			rsi
-	mov			dx, word[rdi+rsi]
-	inc			rsi
-	inc 			rsi
-	div			word[rdi+rsi] 			
-	mov			word[tempans], dx
-	ret
-	
-cont_div:
-	mov			dx, word[tempans]
-	inc 			rsi
-	div 			word[rdi+rsi]
-	mov			word[tempans], dx
-	ret
+parse_loop:
+    mov     al, byte [rsi + rcx]  ; Load the current character into AL
+    cmp     al, 0               ; Check for end of string
+    je      end_parse
 
-; MULTIPLY FUNCTION
-multiply:
-	cmp			rsi, 1
-	jne			cont_mul			
-m_first:	
-	dec			rsi
-	mov			cx, word[rdi+rsi]
-	inc			rsi
-	inc 			rsi
-	mul			word[rdi+rsi] 			
-	mov			word[tempans], cx
-	ret
-	
-cont_mul:
-	mov			cx, word[tempans]
-	inc 			rsi
-	mul			word[rdi+rsi]
-	mov			word[tempans], cx
-	ret
+    ; Parse character
+    cmp     al, '+'             ; Check for addition
+    je      perform_addition
+    cmp     al, '-'             ; Check for subtraction
+    je      perform_subtraction
+    cmp     al, '*'             ; Check for multiplication
+    je      perform_multiplication
+    cmp     al, '/'             ; Check for division
+    je      perform_division
+    ; If the character is not an operator, it's treated as a digit, continue parsing
 
-; SUBTRACT FUNCTION
-subtract:
-	cmp			rsi, 1
-	jne			cont_sub			
-s_first:	
-	dec			rsi
-	mov 			bx, word[rdi+rsi]
-	inc			rsi
-	inc			rsi
-	sub			bx, word[rdi+rsi]
-	mov			word[tempans], bx
-		
-	ret
-	
-cont_sub:
-	mov			bx, word[tempans]
-	inc 			rsi
-	sub			bx, word[rdi+rsi]
-	mov			word[tempans], bx
-	ret
-	
+perform_addition:
+    add     dword [rdi], eax   ; Add the current number to the temporary answer
+    jmp     next_char
+
+perform_subtraction:
+    sub     dword [rdi], eax   ; Subtract the current number from the temporary answer
+    jmp     next_char
+
+perform_multiplication:
+    imul    dword [rdi], eax   ; Multiply the temporary answer by the current number
+    jmp     next_char
+
+perform_division:
+    xor     edx, edx           ; Clear EDX for division
+    mov     ecx, eax           ; Move the current number to ECX for division
+    mov     eax, dword [rdi]   ; Move the temporary answer to EAX for division
+    idiv    ecx                ; Divide the temporary answer by the current number
+    mov     dword [rdi], eax   ; Store the result back in the temporary answer
+
+next_char:
+    inc     rcx                 ; Move to the next character
+    jmp     parse_loop          ; Continue parsing
+
+end_parse:
+    ; Convert the result to ASCII string
+    mov     rax, dword [rdi]    ; Move the result to RAX
+    mov     rdi, result         ; Point RDI to the result buffer
+    call    int_to_ascii        ; Convert the result to ASCII
+    ret
+
+; Function to convert an integer to ASCII string
+int_to_ascii:
+    mov     rbx, 10             ; Base 10
+    mov     rcx, result + 9     ; End of buffer
+    mov     byte [rcx], 0       ; Null terminator
+reverse_loop:
+    dec     rcx                 ; Move backward in buffer
+    xor     rdx, rdx            ; Clear remainder
+    div     rbx                 ; Divide RAX by 10
+    add     dl, '0'             ; Convert remainder to ASCII
+    mov     [rcx], dl           ; Store ASCII digit in buffer
+    test    rax, rax            ; Check for quotient
+    jnz     reverse_loop        ; Continue if quotient is not zero
+    mov     rdi, rcx            ; Move address of first character of the string to RDI
+    ret
