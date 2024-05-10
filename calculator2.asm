@@ -119,7 +119,7 @@ findOper:
 	mov			byte[result],	al			; store first digit into result
 calculateLoop:
 	cmp			byte[nums+rcx], 0			; checking for end of array
-	je			end							; exit if we do
+	je			end					; exit if we do
 	mov			sil, byte[result]			; store current result in sil register
 	mov			dil, byte[nums+rcx]			; store next digit in dil register		
 checkAdd:
