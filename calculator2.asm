@@ -87,7 +87,7 @@ store_n_loop:
     	jmp     		store_n_loop          	; repeat the store loop
 
 store_n_done:	
-	ret                          
+	ret             
 
 
 store_sym:
@@ -115,37 +115,37 @@ store_s_done:
 
 findOper:
 	mov			rbx,	0					
-	mov			rcx,	1					
-	mov			al,	byte[nums+0]
-	mov			byte[result],	al
+	mov			rcx,	1					; initializing the index of nums array
+	mov			al,	byte[nums+0]			; store first digit in al register
+	mov			byte[result],	al			; store first digit into result
 calculateLoop:
-	cmp			byte[nums+rcx], 0
-	je			end			
-	mov			sil, byte[result]
-	mov			dil, byte[nums+rcx]				
+	cmp			byte[nums+rcx], 0			; checking for end of array
+	je			end							; exit if we do
+	mov			sil, byte[result]			; store current result in sil register
+	mov			dil, byte[nums+rcx]			; store next digit in dil register		
 checkAdd:
-	cmp			byte[symbols+rbx], '+'				
+	cmp			byte[symbols+rbx], '+'		; check if current symbol is addition, move to checkSub if not	
 	jne			checkSub
-	call			addition
-	jmp			moveTonext
+	call			addition				; perform addition if symbol is addition
+	jmp			moveTonext					; move to next symbol
 checkSub:
-	cmp			byte[symbols+rbx], '-'				
+	cmp			byte[symbols+rbx], '-'		; check if current symbol is subtraction, move to checkMul if not		
 	jne			checkMul
-	call			subtraction
-	jmp			moveTonext
+	call			subtraction				; perform subtraction operation if symbol is subtraction
+	jmp			moveTonext					; jump to next symbol
 checkMul:
-	cmp			byte[symbols+rbx], '*'				
+	cmp			byte[symbols+rbx], '*'		; check if current symbol is multiply, move to checkDiv if not		
 	jne			checkDiv
-	call			multiply
-	jmp			moveTonext
+	call			multiply				; perform multiplication operation if correct symbol
+	jmp			moveTonext					; move to next symbol
 checkDiv:
 				
-	call			divide
-	jmp			moveTonext
+	call			divide					; perform divison operation if symbol matches division and not other symbols
+	jmp			moveTonext					; jump to next symbol
 moveTonext:	
-	inc			rcx	
-	inc 			rbx
-	jmp 			calculateLoop	
+	inc			rcx							; move to next digit in nums array
+	inc 			rbx						; move to next symbol in symbol array
+	jmp 			calculateLoop			; jump back to start new iteration of loop
 	
 
 addition:
